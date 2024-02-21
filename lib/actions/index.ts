@@ -3,10 +3,11 @@ import { revalidatePath } from "next/cache";
 
 import Product from "../models/product.model";
 //async actions will always be executed in try catch block
-
+import { User } from "@/types";
 import { connectToDB } from "../mongoose";
 import { scrapeAmazonProduct } from "../scaper";
 import { getHighestPrice, getLowestPrice, getAveragePrice } from "../utils";
+import { generateEmailBody, sendEmail } from "../nodemailer";
 
 export async function scrapeAndStoreProduct(productUrl: string) {
   if (!productUrl) return;
@@ -83,13 +84,25 @@ export async function getSimilarProducts(productId: string) {
   }
 }
 
-export async function addUserEmailToProduct(productId: string, email: string) {
+export async function addUserEmailToProduct(productId: string, userEmail: string) {
   try {
     connectToDB();
     const product = await Product.findById(productId);
-    if (!productId) return;
+    if (!product) return;
 
-    const userExists = product.users.some((user: User) => user.email);
+    const userExists = product.users.some((user: User) => user.email === userEmail);
+
+    if(!userExists){
+      product.users.push({email: userEmail});
+
+      await product.save();
+
+    }
+    const emailContent = await generateEmailBody(product, "WELCOME");
+
+    await sendEmail(emailContent, [userEmail]);
+
+
   } catch (e) {
     console.log(e);
   }
