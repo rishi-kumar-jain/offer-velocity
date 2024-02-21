@@ -4,6 +4,11 @@ import { generateEmailBody, sendEmail } from "@/lib/nodemailer";
 import { scrapeAmazonProduct } from "@/lib/scaper";
 import { getAveragePrice, getEmailNotifType, getHighestPrice, getLowestPrice } from "@/lib/utils";
 import { EmailContent } from '@/types';
+import { NextResponse } from "next/server";
+
+export const maxDuration = 300;
+export const dynamic = 'force-dynamic'
+export const revalidate = 0;
 
 export async function GET(){
     try{
@@ -32,7 +37,7 @@ export async function GET(){
       };
 
       const updatedProduct = await Product.findOneAndUpdate(
-      { url: scrapedProduct.url },
+      { url: product.url },
       product,
       
     );
@@ -48,9 +53,9 @@ export async function GET(){
                 }
                 const emailContent = await generateEmailBody(productInfo , emailNotifType );
                 const userEmails = updatedProduct.users.map((user: any)=> user.email);
-                await sendEmail(emailContent, userEmails)
+                await sendEmail(emailContent, userEmails);
             }
-        
+            return updatedProduct
 
             
 
@@ -58,6 +63,10 @@ export async function GET(){
 
 
             }))
+
+            return NextResponse.json({
+                message: 'Ok', data: updatedProducts
+            })
 
     }catch(error){
         throw new Error(`Error in GET: ${error}`);
