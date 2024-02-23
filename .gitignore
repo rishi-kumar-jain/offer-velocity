@@ -41,6 +41,8 @@ next-env.d.ts
 /.pnp
 .pnp.js
 .env
+pnpm-lock.yaml
+
 
 # testing
 /coverage
@@ -70,3 +72,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts+
+
+
